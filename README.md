@@ -1,14 +1,11 @@
-# External Files README
+# File Attributes README
 
 > [!WARNING]
 > **This extension is currently under development.**
 
-Easy access to external files for vscode.
+This is a VS Code extension that refers to `.gitattributes` and `.gitignore`, and displays a message at the top of files that are either auto-generated or not under source control.
 
-## Features
-
-* show external files from command pallete
-* show external files from view on explorer
+## Screenshots
 
 ![screen shot: View on Explorer](./images/screenshot3.png)
 
@@ -18,7 +15,7 @@ Easy access to external files for vscode.
 
 ### 0. ⬇️ Install External Files
 
-Show extension side bar within VS Code(Mac:<kbd>Command</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd>, Windows and Linux: <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd>), type `external-files-vscode` and press <kbd>Enter</kbd> and click <kbd>Install</kbd>. Restart VS Code when installation is completed.
+Show extension side bar within VS Code(Mac:<kbd>Command</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd>, Windows and Linux: <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd>), type `file-attributes-vscode` and press <kbd>Enter</kbd> and click <kbd>Install</kbd>. Restart VS Code when installation is completed.
 
 ### 1. ✨️ Show External Files
 
@@ -30,46 +27,21 @@ You can change [settings](#extension-settings) by `settings.json`.
 
 Enjoy!
 
-## Commands
-
-* `External Files: Show` : show external files
-* `External Files: Show View` show view on explorer
-* `External Files: Hide View` hide view on explorer
-
-## Extension Settings
-
-This extension contributes the following settings by [`settings.json`](https://code.visualstudio.com/docs/customization/userandworkspace#_creating-user-and-workspace-settings)( Mac: <kbd>Command</kbd>+<kbd>,</kbd>, Windows / Linux: <kbd>File</kbd> -> <kbd>Preferences</kbd> -> <kbd>User Settings</kbd> ):
-
-* `external-files.viewOnExplorer.enabled`: set Enable/Disable external files in view on explorer
-
-
-## Keyboard shortcut Settings
-
-In default, External Files's commands doesn't apply keyboard shortcuts. Althogh,
-you can apply keyboard shortcuts by [`keybindings.json`](https://code.visualstudio.com/docs/customization/keybindings#_customizing-shortcuts)
-( Mac: <kbd>Code</kbd> -> <kbd>Preferences</kbd> -> <kbd>Keyboard Shortcuts</kbd>, Windows / Linux: <kbd>File</kbd> -> <kbd>Preferences</kbd> -> <kbd>Keyboard Shortcuts</kbd>).
-
-Command name on `keybindings.json` is diffarent from on Command Pallete. See below table.
-
-|on Command Pallete|on keybindings.json|
-|-|-|
-|`External Files: Show`|`external-files.show`|
-
 ## Release Notes
 
-see ChangLog on [marketplace](https://marketplace.visualstudio.com/items/wraith13.external-files-vscode/changelog) or [github](https://github.com/wraith13/external-files-vscode/blob/master/CHANGELOG.md)
+see ChangLog on [marketplace](https://marketplace.visualstudio.com/items/wraith13.file-attributes-vscode/changelog) or [github](https://github.com/wraith13/file-attributes-vscode/blob/master/CHANGELOG.md)
 
 ## Support
 
-[GitHub Issues](https://github.com/wraith13/external-files-vscode/issues)
+[GitHub Issues](https://github.com/wraith13/file-attributes-vscode/issues)
 
 ## License
 
-[Boost Software License](https://github.com/wraith13/external-files-vscode/blob/master/LICENSE_1_0.txt)
+[Boost Software License](https://github.com/wraith13/file-attributes-vscode/blob/master/LICENSE_1_0.txt)
 
 ## Download VSIX file ( for VS Code compatible softwares )
 
-[Releases · wraith13/external-files-vscode](https://github.com/wraith13/external-files-vscode/releases)
+[Releases · wraith13/file-attributes-vscode](https://github.com/wraith13/file-attributes-vscode/releases)
 
 ## Other extensions of wraith13's work
 

@@ -1,77 +1,160 @@
 'use strict';
 import * as vscode from 'vscode';
 import * as vscel from '@wraith13/vscel';
-import packageJson from "../package.json";
+import { Buffer } from 'buffer';
 import localeEn from "../package.nls.json";
 import localeJa from "../package.nls.ja.json";
-const configRoot = vscel.config.makeRoot(packageJson);
-export const maxRecentlyFiles = configRoot.makeEntry<number>("external-files.maxRecentlyFiles", "root-workspace");
 export type LocaleKeyType = keyof typeof localeEn;
 //const locale =
 vscel.locale.make(localeEn, { "ja": localeJa });
-export namespace ExternalFiles
+export namespace FileAttributes
 {
-    const publisher = packageJson.publisher;
-    const applicationKey = packageJson.name;
-    export const isFolderOrFile = async (uri: vscode.Uri): Promise<"folder" | "file" | undefined> =>
+    export const findGitFileUri = (gitfile: string) =>
+        async (uri: vscode.Uri): Promise<vscode.Uri | undefined> =>
+        {
+            let current = uri;
+            while(true)
+            {
+                const candidate = vscode.Uri.joinPath(current, gitfile);
+                try
+                {
+                    await vscode.workspace.fs.stat(candidate);
+                    return candidate;
+                }
+                catch
+                {
+                }
+                const parent = vscode.Uri.joinPath(current, '..');
+                if (parent.fsPath === current.fsPath)
+                {
+                    return undefined;
+                }
+                current = parent;
+            }
+        };
+    export const findGitIgnoreUri = findGitFileUri(".gitignore");
+    export const findGitAttributesUri = findGitFileUri(".gitattributes");
+    export const parseGitAttributes = async (gitAttributesUri: vscode.Uri): Promise<{ pattern: string, attrs: string[] }[]> =>
     {
         try
         {
-            const stat = await vscode.workspace.fs.stat(uri);
-            switch(true)
-            {
-            case 0 < (stat.type & vscode.FileType.Directory):
-                return "folder";
-            case 0 < (stat.type & vscode.FileType.File):
-                return "file";
-            default:
-                return undefined;
-            }
+            const gitattributesContent = await vscode.workspace.fs.readFile(gitAttributesUri);
+            const content = Buffer.from(gitattributesContent).toString("utf8");
+            return content
+                .split(/\r?\n/)
+                .map(line => line.trim())
+                .filter(line => line && !line.startsWith('#'))
+                .map
+                (
+                    line =>
+                    {
+                        const [pattern, ...attrs] = line.split(/\s+/);
+                        return { pattern, attrs };
+                    }
+                );
         }
         catch
         {
-            return undefined;
+            return [];
         }
     };
-    export const isFile = async (uri: vscode.Uri): Promise<boolean> =>
-        "file" === await isFolderOrFile(uri);
-    export const isFolder = async (uri: vscode.Uri): Promise<boolean> =>
-        "folder" === await isFolderOrFile(uri);
-    export const getSubFolders = async (uri: vscode.Uri): Promise<vscode.Uri[]> =>
+    export const matchGitAttributes = async (gitAttributesUri: vscode.Uri, uri: vscode.Uri): Promise<{ pattern: string, attrs: string[] } | undefined> =>
     {
-        const stat = await vscode.workspace.fs.stat(uri);
-        if (0 <= (stat.type & vscode.FileType.Directory))
+        if (gitAttributesUri)
         {
-            const entries = await vscode.workspace.fs.readDirectory(uri);
-            return entries
-                .filter(i => 0 < (i[1] & vscode.FileType.Directory))
-                .map(i => vscode.Uri.joinPath(uri, i[0]));
+            const entries = await parseGitAttributes(gitAttributesUri);
+            // ワークスペースルートを取得
+            const wsFolder = vscode.workspace.getWorkspaceFolder(uri);
+            const relPath = wsFolder ? vscode.workspace.asRelativePath(uri, false).replace(/\\/g, '/') : uri.fsPath.replace(/\\/g, '/');
+            let lastMatched: { pattern: string, attrs: string[] } | undefined = undefined;
+            let lastMatchedPattern = '';
+            for (const entry of entries)
+            {
+                let pattern = entry.pattern.trim();
+                // * のみはルート直下のファイルだけ
+                if (pattern === '*') {
+                    if (!relPath.includes('/') && /[^/]+\.[^/]+$/.test(relPath)) {
+                        lastMatched = entry;
+                        lastMatchedPattern = entry.pattern;
+                    }
+                    continue;
+                }
+                // 先頭/末尾の / を考慮
+                if (pattern.startsWith('/')) pattern = pattern.slice(1);
+                if (pattern.endsWith('/')) pattern = pattern + '**';
+                // **/ → (任意のディレクトリ/)
+                pattern = pattern.replace(/\*\*\//g, '(?:.*/)?');
+                // /** → (任意の/で終わる)
+                pattern = pattern.replace(/\/\*\*$/g, '(?:/.*)?');
+                // ** → 任意のディレクトリ
+                pattern = pattern.replace(/\*\*/g, '.*');
+                // * → パス区切りをまたがないワイルドカード
+                pattern = pattern.replace(/\*/g, '[^/]*');
+                pattern = pattern.replace(/\./g, '\.');
+                if (!pattern.startsWith('(?:.*/)?')) pattern = '(?:.*/)?' + pattern;
+                const regex = new RegExp('^' + pattern + '$');
+                if (regex.test(relPath))
+                {
+                    lastMatched = entry;
+                    lastMatchedPattern = entry.pattern;
+                }
+            }
+            // デバッグ用: matchedPattern をグローバル変数で返す
+            (globalThis as any)._lastMatchedPattern = lastMatchedPattern;
+            return lastMatched;
         }
-        return [];
+        return undefined;
     };
-    export const getFiles = async (uri: vscode.Uri): Promise<vscode.Uri[]> =>
+    export const isGenericFile = async (uri: vscode.Uri): Promise<boolean | undefined> =>
     {
-        const stat = await vscode.workspace.fs.stat(uri);
-        if (0 <= (stat.type & vscode.FileType.Directory))
+        const gitAttributesUri = await findGitAttributesUri(uri);
+        if (gitAttributesUri)
         {
-            const entries = await vscode.workspace.fs.readDirectory(uri);
-            return entries
-                .filter(i => 0 < (i[1] & vscode.FileType.File))
-                .map(i => vscode.Uri.joinPath(uri, i[0]));
+            const matched = await matchGitAttributes(gitAttributesUri, uri);
+            if (matched)
+            {
+                const autoGeneratedAttrs = [ "linguist-generated", "generated" ];
+                return matched.attrs.some
+                (
+                    attr => autoGeneratedAttrs.some
+                    (
+                        genAttr => attr === genAttr || attr === `${genAttr}=true`
+                    )
+                );
+            }
         }
-        return [];
+        return undefined;
     };
-    export const getFolderPath = async (resourceUri: vscode.Uri): Promise<string | undefined> =>
+    export const isIgnoredFile = async (uri: vscode.Uri): Promise<boolean | undefined> =>
     {
-        switch(await isFolderOrFile(resourceUri))
+        const gitignoreUri = await findGitIgnoreUri(uri);
+        if (gitignoreUri)
         {
-        case "folder":
-            return resourceUri.fsPath;
-        case "file":
-            return vscode.Uri.joinPath(resourceUri, "..").fsPath;
-        default:
-            return undefined;
+            try {
+                const content = Buffer.from(await vscode.workspace.fs.readFile(gitignoreUri)).toString("utf8");
+                const lines = content.split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'));
+                const filePath = uri.fsPath.replace(/\\/g, '/');
+                for (const pattern of lines) {
+                    if (pattern.endsWith('/')) {
+                        // ディレクトリ指定: out/ → out/配下すべて
+                        const absDir = vscode.Uri.joinPath(gitignoreUri, '..', pattern).fsPath.replace(/\\/g, '/');
+                        if (filePath.startsWith(absDir)) {
+                            return true;
+                        }
+                    } else {
+                        // ファイル名一致
+                        const absFile = vscode.Uri.joinPath(gitignoreUri, '..', pattern).fsPath.replace(/\\/g, '/');
+                        if (filePath === absFile) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            } catch {
+                return undefined;
+            }
         }
+        return undefined;
     };
     const isRegularTextEditor = (editor: vscode.TextEditor): boolean =>
         undefined !== editor.viewColumn && 0 < editor.viewColumn;
@@ -79,114 +162,104 @@ export namespace ExternalFiles
         0 === (vscode.workspace.workspaceFolders ?? []).filter(i => uri.path.startsWith(i.uri.path)).length;
     const isExternalDocuments = (document: vscode.TextDocument): boolean =>
         ! document.isUntitled && isExternalFiles(document.uri);
-    namespace Icons
-    {
-        export let folderIcon: vscode.IconPath;
-        export let pinIcon: vscode.IconPath;
-        export let historyIcon: vscode.IconPath;
-        export const initialize = (context: vscode.ExtensionContext): void =>
-        {
-            folderIcon = new vscode.ThemeIcon("folder");
-            pinIcon =
-            {
-                light: vscode.Uri.joinPath(context.extensionUri, "images", "pin.1024.svg"),
-                dark: vscode.Uri.joinPath(context.extensionUri, "images", "pin-white.1024.svg"),
-            };
-            historyIcon =
-            {
-                light: vscode.Uri.joinPath(context.extensionUri, "images", "history.1024.svg"),
-                dark: vscode.Uri.joinPath(context.extensionUri, "images", "history-white.1024.svg"),
-            };
-        };
-    }
-    export namespace Config
-    {
-        const root = vscel.config.makeRoot(packageJson);
-        export namespace ViewOnExplorer
-        {
-            export const enabled = root.makeEntry<boolean>("external-files.viewOnExplorer.enabled", "root-workspace");
-        }
-    }
-    export const makeCommand = (command: string, withActivate?: "withActivate") =>
-        async (node: any) =>
-        {
-            if (withActivate)
-            {
-                await vscode.commands.executeCommand("vscode.open", node.resourceUri);
-            }
-            await vscode.commands.executeCommand(command, node.resourceUri);
-        };
     export const initialize = (context: vscode.ExtensionContext): void =>
     {
-        Icons.initialize(context);
-        context.subscriptions.push
-        (
-            //  コマンドの登録
-            vscode.commands.registerCommand(`${applicationKey}.revealFileInFinder`, makeCommand("revealFileInOS")),
-            vscode.commands.registerCommand(`${applicationKey}.revealFileInExplorer`, makeCommand("revealFileInOS")),
-            vscode.commands.registerCommand(`${applicationKey}.copyFilePath`, makeCommand("copyFilePath")),
-            vscode.commands.registerCommand(`${applicationKey}.showActiveFileInExplorer`, makeCommand("workbench.files.action.showActiveFileInExplorer", "withActivate")),
-            //vscode.window.registerTreeDataProvider(applicationKey, externalFilesProvider),
-            //  イベントリスナーの登録
-            vscode.window.onDidChangeActiveTextEditor(onDidChangeActiveTextEditor),
-            //vscode.workspace.onDidOpenTextDocument(a => updateExternalDocuments(a)),
-            vscode.workspace.onDidChangeConfiguration
-            (
-                event =>
-                {
-                    if (event.affectsConfiguration("external-files"))
-                    {
-                        onDidChangeConfiguration();
-                    }
-                }
-            )
-        );
-        //RecentlyUsedExternalFiles.clear();
-        updateViewOnExplorer();
+        context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(onDidChangeActiveTextEditor));
         onDidChangeActiveTextEditor(vscode.window.activeTextEditor);
     };
+    // デバッグ用フラグ
+    const DEBUG_BANNER = false; // trueでデバッグバナー、falseでユーザー向けバナー
+    const getBannerText = async (editor: vscode.TextEditor): Promise<string | undefined> =>
+    {
+        if (DEBUG_BANNER)
+        {
+            const gitAttributesUri = await findGitAttributesUri(editor.document.uri);
+            const gitignoreUri = await findGitIgnoreUri(editor.document.uri);
+            // relPath 取得
+            const wsFolder = vscode.workspace.getWorkspaceFolder(editor.document.uri);
+            const relPath = wsFolder ? vscode.workspace.asRelativePath(editor.document.uri, false).replace(/\\/g, '/') : editor.document.uri.fsPath.replace(/\\/g, '/');
+            // gitattributes の最後にマッチしたパターンを取得
+            const matchedPattern = (globalThis as any)._lastMatchedPattern || '';
+            const generic = await isGenericFile(editor.document.uri);
+            const ignored = await isIgnoredFile(editor.document.uri);
+            return `DEBUG: relPath=${relPath}, .gitattributes=${gitAttributesUri ? 'found' : 'not found'}, matchedPattern=${matchedPattern}, .gitignore=${gitignoreUri ? 'found' : 'not found'}, isGenericFile=${String(generic)}, isIgnoredFile=${String(ignored)}`;
+        }
+        else
+        if (await isGenericFile(editor.document.uri))
+        {
+            return 'このファイルは自動生成ファイルです';
+        }
+        else
+        if (await isIgnoredFile(editor.document.uri))
+        {
+            return 'このファイルはソース管理で無視されています';
+        }
+        return undefined;
+    };
+    let bannerDecorationType: vscode.TextEditorDecorationType | undefined;
     const onDidChangeActiveTextEditor = (editor: vscode.TextEditor | undefined): void =>
     {
-        let isPinnedExternalFile = false;
-        let isRecentlyUsedExternalFile = false;
-        if (editor && isRegularTextEditor(editor))
+        if (editor && isRegularTextEditor(editor) && ! isExternalDocuments(editor.document))
         {
-            isRecentlyUsedExternalFile = ! isPinnedExternalFile && isExternalDocuments(editor.document);
-            updateExternalDocuments(editor.document);
+            // バナー表示処理
+            (async () =>
+                {
+                    // 既存デコレーションをクリア
+                    if (bannerDecorationType)
+                    {
+                        editor.setDecorations(bannerDecorationType, []);
+                    }
+                    const bannerText = getBannerText(editor);
+                    if (bannerText)
+                    {
+                        if ( ! bannerDecorationType)
+                        {
+                            bannerDecorationType = vscode.window.createTextEditorDecorationType
+                            ({
+                                isWholeLine: true,
+                                backgroundColor: new vscode.ThemeColor('editorWarning.background'),
+                                color: new vscode.ThemeColor('editorWarning.foreground'),
+                                after:
+                                {
+                                    contentText: '',
+                                },
+                            });
+                        }
+                        editor.setDecorations
+                        (
+                            bannerDecorationType,
+                            [{
+                                range: new vscode.Range(0, 0, 0, 0),
+                                renderOptions:
+                                {
+                                    after:
+                                    {
+                                        contentText: ` ${bannerText} `,
+                                        margin: '0 0 0 0',
+                                        color: new vscode.ThemeColor('editorWarning.foreground'),
+                                        backgroundColor: new vscode.ThemeColor('editorWarning.background'),
+                                        fontWeight: 'bold',
+                                    }
+                                }
+                            }]
+                        );
+                    }
+                    else
+                    if (bannerDecorationType)
+                    {
+                        editor.setDecorations(bannerDecorationType, []);
+                    }
+                }
+            )();
+        } else if (editor && bannerDecorationType) {
+            // エディタが通常でない場合はバナーを消す
+            editor.setDecorations(bannerDecorationType, []);
         }
-        vscode.commands.executeCommand
-        (
-            "setContext",
-            `${publisher}.${applicationKey}.isPinnedExternalFile`,
-            isPinnedExternalFile
-        );
-        vscode.commands.executeCommand
-        (
-            "setContext",
-            `${publisher}.${applicationKey}.isRecentlyUsedExternalFile`,
-            isRecentlyUsedExternalFile
-        );
-    };
-    const updateExternalDocuments = async (_document: vscode.TextDocument) =>
-    {
-    };
-    const onDidChangeConfiguration = (): void =>
-    {
-        updateViewOnExplorer();
-    };
-    const updateViewOnExplorer = (): void =>
-    {
-        vscode.commands.executeCommand
-        (
-            "setContext",
-            "showExternalFilesViewOnexplorer",
-            Config.ViewOnExplorer.enabled.get("default-scope")
-        );
     };
 }
 export const activate = (context: vscode.ExtensionContext) : void =>
 {
-    ExternalFiles.initialize(context);
+    FileAttributes.initialize(context);
 };
 export const deactivate = () : void =>
 {

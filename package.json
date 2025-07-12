@@ -2,8 +2,8 @@
     "name": "file-attributes",
     "displayName": "File Attributes",
     "description": "show file attributes inline.",
-    "icon": "images/externalhex.128.png",
-    "version": "2.1.4",
+    "icon": "images/file-attributes.128.png",
+    "version": "0.0.0",
     "publisher": "wraith13",
     "license": "SEE LICENSE IN LICENSE_1_0.txt",
     "engines": {
@@ -21,85 +21,16 @@
         "Other"
     ],
     "keywords": [
-        "external",
-        "untitled",
-        "files",
-        "documents"
+        "git",
+        "attributes",
+        "ignore",
+        "files"
     ],
     "activationEvents": [
         "onStartupFinished"
     ],
     "main": "./out/extension.js",
     "browser": "./out/extension.js",
-    "contributes": {
-        "commands": [
-            {
-                "command": "external-files.show",
-                "title": "%external-files-vscode.show.title%",
-                "category": "%external-files-vscode.title%"
-            },
-            {
-                "command": "external-files.showView",
-                "title": "%external-files-vscode.showView.title%",
-                "category": "%external-files-vscode.title%"
-            },
-            {
-                "command": "external-files.hideView",
-                "title": "%external-files-vscode.hideView.title%",
-                "category": "%external-files-vscode.title%"
-            },
-            {
-                "icon": {
-                    "light": "images/pin.1024.svg",
-                    "dark": "images/pin-white.1024.svg"
-                },
-                "command": "external-files.addPinnedFile",
-                "title": "%external-files-vscode.addPinnedFile.title%",
-                "category": "%external-files-vscode.title%"
-            },
-            {
-                "command": "external-files.revealFileInFinder",
-                "title": "%external-files-vscode.revealFileInFinder.title%",
-                "category": "file"
-            },
-            {
-                "command": "external-files.revealFileInExplorer",
-                "title": "%external-files-vscode.revealFileInExplorer.title%",
-                "category": "file"
-            },
-            {
-                "command": "external-files.copyFilePath",
-                "title": "%external-files-vscode.copyFilePath.title%",
-                "category": "file"
-            },
-            {
-                "command": "external-files.showActiveFileInExplorer",
-                "title": "%external-files-vscode.showActiveFileInExplorer.title%",
-                "category": "file"
-            }
-        ],
-        "configuration": [
-            {
-                "title": "%external-files-vscode.title%",
-                "properties": {
-                    "external-files.viewOnExplorer.enabled": {
-                        "type": "boolean",
-                        "default": true,
-                        "description": "%external-files.viewOnExplorer.enabled.description%",
-                        "scope": "window"
-                    },
-                    "external-files.maxRecentlyFiles": {
-                        "type": "number",
-                        "default": 30,
-                        "minimum": 0,
-                        "maximum": 100,
-                        "description": "%external-files.maxRecentlyFiles.description%",
-                        "scope": "window"
-                    }
-                }
-            }
-        ]
-    },
     "scripts": {
         "pretest": "npm run compile-web",
         "vscode:prepublish": "npm run package-web",
