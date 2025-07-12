@@ -1,0 +1,8 @@
+out
+node_modules
+.history
+.vscode-test
+.vscode-test-web
+private
+desktop.ini
+.DS_Store
