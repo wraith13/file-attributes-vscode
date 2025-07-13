@@ -4,6 +4,12 @@ All notable changes to the File Attributes VS Code Extension will be documented 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 1.0.0 - 2025-07-13
+
+### Added
+
+- 🎊 Initial release of Clairvoyant. 🎉
+
 ## [Unreleased]
 
 ## 0.0.0 - 2025-07-12

@@ -1,13 +1,13 @@
 {
     "name": "file-attributes",
     "displayName": "File Attributes",
-    "description": "show file attributes inline.",
+    "description": "Refers to `.gitattributes` and `.gitignore`, and displays a message at the top of files that are either auto-generated or not under source control.",
     "icon": "images/file-attributes.128.png",
-    "version": "0.0.0",
+    "version": "1.0.0",
     "publisher": "wraith13",
     "license": "SEE LICENSE IN LICENSE_1_0.txt",
     "engines": {
-        "vscode": "^1.61.0"
+        "vscode": "^1.97.2"
     },
     "bugs": {
         "url": "https://github.com/wraith13/file-attributes-vscode/issues"
