@@ -41,7 +41,6 @@
         "run-in-browser": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. ."
     },
     "dependencies": {
-        "@wraith13/vscel": "^0.0.52"
     },
     "devDependencies": {
         "@types/vscode": "^1.97.2",
