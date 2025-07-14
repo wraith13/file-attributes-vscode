@@ -21,6 +21,47 @@ This extension has no settings or commands. When you open files that are specifi
 
 Enjoy!
 
+## Indicating Auto-Generated Files in `.gitattributes`
+
+To explicitly mark files as auto-generated in your repository, you can use the `.gitattributes` file. By specifying certain attributes, you inform tools and contributors that these files are generated automatically and should not be manually edited.
+
+For example, you can add the following line to your `.gitattributes` file:
+
+```gitattributes
+# Mark all files in the 'generated/' directory as auto-generated
+generated/* linguist-generated=true
+```
+
+Or, to mark specific file types as auto-generated:
+
+```gitattributes
+# Mark all .pb.go files as auto-generated
+*.pb.go linguist-generated=true
+```
+
+The `linguist-generated=true` attribute is recognized by many tools (such as GitHub) to identify generated files. This extension also uses this attribute to display a message at the top of the file in VS Code, warning users that the file is auto-generated.
+
+**Note:** You can adjust the file patterns as needed for your project structure.
+
+No further configuration is required—just maintain your `.gitattributes` file as usual.
+
+## Indicating Ignored Files in `.gitignore`
+
+To have this extension display a warning for files ignored by source control, add file patterns to your `.gitignore` file as you normally would. For example:
+
+```gitignore
+# Ignore all log files
+*.log
+
+# Ignore build output directories
+/dist/
+/build/
+```
+
+When you open a file in VS Code that matches a pattern in `.gitignore`, the extension will automatically show a message at the top of the file indicating it is ignored by source control.
+
+No additional configuration is required—just maintain your `.gitignore` as usual.
+
 ## Release Notes
 
 see ChangLog on [marketplace](https://marketplace.visualstudio.com/items/wraith13.file-attributes-vscode/changelog) or [github](https://github.com/wraith13/file-attributes-vscode/blob/master/CHANGELOG.md)

@@ -4,6 +4,12 @@ All notable changes to the File Attributes VS Code Extension will be documented 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## 1.0.1 - 2025-07-??
+
+### Added
+
+- Added documentation in README.md about how to configure settings using `.gitattributes` and `.gitignore`.
+
 ## 1.0.0 - 2025-07-13
 
 ### Added
