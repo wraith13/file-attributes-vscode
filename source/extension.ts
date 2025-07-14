@@ -199,9 +199,12 @@ export namespace FileAttributes
                     }
                     else
                     {
-                        // ファイル名一致
-                        const absFile = vscode.Uri.joinPath(gitignoreUri, "..", pattern).fsPath.replace(/\\/g, "/");
-                        if (filePath === absFile)
+                        // ディレクトリ名指定（スラッシュなし）: out → out/配下すべて
+                        const absDir = vscode.Uri.joinPath(gitignoreUri, "..", pattern).fsPath.replace(/\\/g, "/");
+                        if (
+                            filePath === absDir ||
+                            filePath.startsWith(absDir + "/")
+                        )
                         {
                             return true;
                         }

@@ -10,6 +10,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 - Added documentation in README.md about how to configure settings using `.gitattributes` and `.gitignore`.
 
+### Fixed
+
+- Fixed a bug where directory patterns and patterns without a trailing slash in `.gitignore` were not interpreted correctly.
+
 ## 1.0.0 - 2025-07-13
 
 ### Added
