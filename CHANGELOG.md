@@ -10,6 +10,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 - Fixed a bug where a pattern like `**/*.css linguist-generated=true` in `.gitattributes` incorrectly matched files such as `*.scss`.
 
+### Changed
+
+- Changed the icon design (added a white border).
+
 ## 1.0.1 - 2025-07-14
 
 ### Added
