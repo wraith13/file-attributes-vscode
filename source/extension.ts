@@ -136,7 +136,12 @@ export namespace FileAttributes
                 pattern = pattern.replace(/\*\*/g, ".*");
                 // * → パス区切りをまたがないワイルドカード
                 pattern = pattern.replace(/\*/g, "[^/]*");
-                pattern = pattern.replace(/\./g, "\.");
+                pattern = pattern.replace(/\./g, "\\.");
+                // 拡張子完全一致のための修正
+                // 例: *.css → .cssで終わるものだけ
+                if (/\\\.\w+$/.test(pattern)) {
+                    pattern = pattern + "$";
+                }
                 if ( ! pattern.startsWith("(?:.*/)?"))
                 {
                     pattern = "(?:.*/)?" + pattern;
