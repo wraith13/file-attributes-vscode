@@ -1,4 +1,5 @@
 {
+    "This file is outside the workspace.": "このファイルはワークスペース外のファイルです。",
     "This file is auto-generated.": "このファイルは自動生成されます。",
     "This file is ignored by source control.": "このファイルはソース管理で無視されています。"
 }

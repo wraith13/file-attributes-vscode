@@ -265,6 +265,11 @@ export namespace FileAttributes
             return `DEBUG: relPath=${relPath}, .gitattributes=${gitAttributesUri ? "found": "not found"}, matchedPattern=${matchedPattern}, .gitignore=${gitignoreUri ? "found": "not found"}, isGenericFile=${String(generic)}, isIgnoredFile=${String(ignored)}`;
         }
         else
+        if (isExternalDocuments(editor.document))
+        {
+            return Locale.map("This file is outside the workspace.");
+        }
+        else
         if (await isGenericFile(editor.document.uri))
         {
             return Locale.map("This file is auto-generated.");
@@ -278,9 +283,8 @@ export namespace FileAttributes
     };
     const onDidChangeActiveTextEditor = (editor: vscode.TextEditor | undefined): void =>
     {
-        if (editor && isRegularTextEditor(editor) && ! isExternalDocuments(editor.document))
+        if (editor && isRegularTextEditor(editor))
         {
-            // バナー表示処理
             (async () =>
                 {
                     const bannerText = await getBannerText(editor);
@@ -315,7 +319,6 @@ export namespace FileAttributes
         else
         if (editor)
         {
-            // エディタが通常でない場合はバナーを消す
             editor.setDecorations(bannerDecorationType, []);
         }
     };

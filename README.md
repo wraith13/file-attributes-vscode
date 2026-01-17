@@ -2,6 +2,8 @@
 
 This is a VS Code Extension that refers to `.gitattributes` and `.gitignore`, and displays a message at the top of files that are either auto-generated or not under source control.
 
+It also displays a warning when a file is outside the workspace.
+
 Support languages: English(en), Čeština(cs), Deutsch(de), Español(es), Français(fr), Magyar(hu), Italiano(it), 日本語(ja), 한국어(ko), Polski(pl), Português Brasileiro(pt-br), Русский(ru), Türkçe(tr), 简体中文(zh-cn), 繁體中文(zh-tw)
 
 ## Screenshots
