@@ -3,7 +3,7 @@
     "displayName": "File Attributes",
     "description": "Refers to `.gitattributes` and `.gitignore`, and displays a message at the top of files that are either auto-generated or not under source control.",
     "icon": "images/file-attributes.128.png",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "publisher": "wraith13",
     "license": "SEE LICENSE IN LICENSE_1_0.txt",
     "engines": {
