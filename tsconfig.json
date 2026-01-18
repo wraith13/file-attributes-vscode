@@ -31,7 +31,8 @@
         "resolveJsonModule": true,
         "esModuleInterop": true,
         "types": [
-            "vscode"
+            "vscode",
+            "node"
         ]
     },
     "exclude": [

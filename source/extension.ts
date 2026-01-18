@@ -1,6 +1,5 @@
 'use strict';
 import * as vscode from "vscode";
-import { Buffer } from "buffer";
 import localeEn from "../package.nls.json";
 import localeCs from "../package.nls.cs.json";
 import localeDe from "../package.nls.de.json";
